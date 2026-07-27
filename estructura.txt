@@ -1,0 +1,27 @@
+mi-api/
+├── app/
+│   ├── main.py              # Punto de entrada (inicializa FastAPI, CORS, middlewares)
+│   ├── config.py            # Variables de entorno (Pydantic Settings)
+│   ├── database.py          # Conexión y sesión de Base de Datos
+│   │
+│   ├── core/                # Transversal a toda la app
+│   │   ├── security.py      # Funciones para passwords, tokens JWT, etc.
+│   │   └── dependencies.py  # Dependencias globales (ej. get_db)
+│   │
+│   ├── features/            # MÓDULOS DE NEGOCIO (Modular)
+│   │   ├── users/
+│   │   │   ├── router.py    # Endpoints HTTP (/users, /users/{id})
+│   │   │   ├── schemas.py   # Modelos Pydantic (entrada/salida de datos)
+│   │   │   ├── models.py    # Modelos ORM (tablas de PostgreSQL)
+│   │   │   └── service.py   # Lógica de negocio / consultas a la DB
+│   │   │
+│   │   └── auth/
+│   │       ├── router.py
+│   │       ├── schemas.py
+│   │       └── service.py
+│   │
+│   └── router.py            # Agregador central que une todos los routers
+│
+├── pyproject.toml
+├── uv.lock
+└── README.md
