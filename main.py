@@ -3,8 +3,9 @@ from features.enlaces.router import router as enlaces_router
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from sqlalchemy import text
-from core.database import engine
-
+from core.database import engine, Base
+from fastapi.staticfiles import StaticFiles
+from core.config import settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -14,6 +15,12 @@ async def lifespan(app: FastAPI):
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
         print("✅ Base de datos conectada correctamente.")
+
+        print("🔄 Creando tablas en la base de datos...")
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        print("✅ Tablas creadas/verificadas correctamente.")
+        
     except Exception as e:
         print(f"❌ Error de conexión: {e}")
         raise
@@ -30,7 +37,12 @@ app = FastAPI(title="Portal Enlaces CESFAM",
             lifespan=lifespan
             )
 
-
+#sirve los logos
+app.mount(
+    "/logos",
+    StaticFiles(directory=settings.UPLOAD_DIR),
+    name="logos",
+)
 
 # Habilitar CORS para que React se conecte sin problemas
 app.add_middleware(
