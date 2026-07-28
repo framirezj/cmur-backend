@@ -10,6 +10,7 @@ from .schemas import EnlaceResponse, CategoriaEnlace
 router = APIRouter(prefix="/enlaces",tags=["Enlaces"])
 
 
+#esta funcion devuelve una instancia de la clase EnlaceService para poder ocupar el metodo de listar en este caso.
 def get_service(db: AsyncSession = Depends(get_db)) -> EnlaceService:
     return EnlaceService(repo=EnlaceRepository(db=db))
 
