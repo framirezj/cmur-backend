@@ -1,10 +1,13 @@
 from fastapi import FastAPI
 from features.enlaces.router import router as enlaces_router
+from features.usuarios.router import router as usuarios_router
+import features.usuarios.models  # noqa: F401 — registra tablas en Base.metadata
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from sqlalchemy import text
 from core.database import engine, Base
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from core.config import settings
 
 @asynccontextmanager
@@ -55,6 +58,7 @@ app.add_middleware(
 
 #ROUTERS       
 app.include_router(enlaces_router)
+app.include_router(usuarios_router)
 
 #STATUS
 @app.get("/health",tags=["Health"])
@@ -62,6 +66,11 @@ async def health():
     return {"status":"ok",
             "info":"Portal Enlaces CESFAM"
     }
+
+
+@app.get("/test-login", include_in_schema=False)
+async def test_login_page():
+    return FileResponse("test_google_login.html")
 
 
 
