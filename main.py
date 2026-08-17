@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from features.enlaces.router import router as enlaces_router
 from features.usuarios.router import router as usuarios_router
+from features.indicadores.router import router as indicadores_router
 import features.usuarios.models  # noqa: F401 — registra tablas en Base.metadata
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -59,6 +60,7 @@ app.add_middleware(
 #ROUTERS       
 app.include_router(enlaces_router)
 app.include_router(usuarios_router)
+app.include_router(indicadores_router)
 
 #STATUS
 @app.get("/health",tags=["Health"])
