@@ -1,6 +1,6 @@
 from core.database import Base
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String
+from sqlalchemy import String, Integer, ForeignKey
 
 class Anexo(Base):
     __tablename__ = "anexos"
@@ -10,3 +10,9 @@ class Anexo(Base):
     ubicacion: Mapped[str] = mapped_column(String(255), nullable=False)
     unidad_servicio: Mapped[str] = mapped_column(String(255), nullable=False)
     funcionarios: Mapped[str] = mapped_column(String(255), nullable=False)
+    creado_por_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True
+    )
+    actualizado_por_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True
+    )

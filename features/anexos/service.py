@@ -25,11 +25,11 @@ class AnexoService:
             )
         return anexo
 
-    async def crear_anexo(self, data: AnexoCreate) -> Anexo:
-        return await self.repo.create(data)
+    async def crear_anexo(self, data: AnexoCreate, usuario_id: int) -> Anexo:
+        return await self.repo.create(data, usuario_id=usuario_id)
 
-    async def actualizar_anexo(self, anexo_id: int, data: AnexoUpdate) -> Anexo:
-        anexo = await self.repo.update(anexo_id, data)
+    async def actualizar_anexo(self, anexo_id: int, data: AnexoUpdate, usuario_id: int) -> Anexo:
+        anexo = await self.repo.update(anexo_id, data, usuario_id=usuario_id)
         if not anexo:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -37,7 +37,7 @@ class AnexoService:
             )
         return anexo
 
-    async def eliminar_anexo(self, anexo_id: int) -> None:
+    async def eliminar_anexo(self, anexo_id: int, usuario_id: int) -> None:
         deleted = await self.repo.delete(anexo_id)
         if not deleted:
             raise HTTPException(

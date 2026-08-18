@@ -7,35 +7,35 @@ from features.anexos.schemas import AnexoCreate, AnexoUpdate
 
 INITIAL_ANEXOS = [
     {
-        "id": 1,
+        "id": 1000,
         "anexo": "101",
         "ubicacion": "Segundo Piso, Ala Norte",
         "unidad_servicio": "SECTOR ROJO",
         "funcionarios": "Sra. Jefa (Directora)",
     },
     {
-        "id": 2,
+        "id": 1001,
         "anexo": "102",
         "ubicacion": "Primer Piso, Pasillo Central",
         "unidad_servicio": "SECTOR VERDE",
         "funcionarios": "E.U. Pérez y E.U. Gómez",
     },
     {
-        "id": 3,
+        "id": 1002,
         "anexo": "201",
         "ubicacion": "Módulo 3",
         "unidad_servicio": "SECTOR AZUL",
         "funcionarios": "Dr. Rojas / Enfermera María",
     },
     {
-        "id": 4,
+        "id": 1003,
         "anexo": "301",
         "ubicacion": "Edificio Anexo",
         "unidad_servicio": "SECTOR AMARILLO",
         "funcionarios": "Téc. Dentista López",
     },
     {
-        "id": 5,
+        "id": 1004,
         "anexo": "302",
         "ubicacion": "Sala multiuso",
         "unidad_servicio": "SECTOR TRANSVERSAL",
@@ -95,19 +95,21 @@ class AnexoRepository:
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
-    async def create(self, data: AnexoCreate) -> Anexo:
+    async def create(self, data: AnexoCreate, usuario_id: int | None = None) -> Anexo:
         anexo_obj = Anexo(
             anexo=data.anexo,
             ubicacion=data.ubicacion,
             unidad_servicio=data.unidadServicio,
             funcionarios=data.funcionarios,
+            creado_por_id=usuario_id,
+            actualizado_por_id=usuario_id,
         )
         self.db.add(anexo_obj)
         await self.db.commit()
         await self.db.refresh(anexo_obj)
         return anexo_obj
 
-    async def update(self, anexo_id: int, data: AnexoUpdate) -> Anexo | None:
+    async def update(self, anexo_id: int, data: AnexoUpdate, usuario_id: int | None = None) -> Anexo | None:
         anexo_obj = await self.get_by_id(anexo_id)
         if not anexo_obj:
             return None
@@ -118,6 +120,9 @@ class AnexoRepository:
 
         for key, value in update_data.items():
             setattr(anexo_obj, key, value)
+
+        if usuario_id is not None:
+            anexo_obj.actualizado_por_id = usuario_id
 
         await self.db.commit()
         await self.db.refresh(anexo_obj)

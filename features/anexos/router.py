@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_db
+from core.security import get_current_user_id
 from features.anexos.service import AnexoService
 from features.anexos.repository import AnexoRepository
 from features.anexos.schemas import AnexoResponse, AnexoCreate, AnexoUpdate
@@ -44,34 +45,40 @@ async def obtener_anexo(
     response_model=AnexoResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Crear un nuevo anexo",
+    description="Requiere autenticación (Bearer Token). Registra el usuario creador.",
 )
 async def crear_anexo(
     body: AnexoCreate,
+    usuario_id: int = Depends(get_current_user_id),
     service: AnexoService = Depends(get_service),
 ):
-    return await service.crear_anexo(body)
+    return await service.crear_anexo(body, usuario_id=usuario_id)
 
 
 @router.put(
     "/{anexo_id}",
     response_model=AnexoResponse,
     summary="Actualizar un anexo",
+    description="Requiere autenticación (Bearer Token). Registra el usuario que realizó la actualización.",
 )
 async def actualizar_anexo(
     anexo_id: int,
     body: AnexoUpdate,
+    usuario_id: int = Depends(get_current_user_id),
     service: AnexoService = Depends(get_service),
 ):
-    return await service.actualizar_anexo(anexo_id, body)
+    return await service.actualizar_anexo(anexo_id, body, usuario_id=usuario_id)
 
 
 @router.delete(
     "/{anexo_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Eliminar un anexo",
+    description="Requiere autenticación (Bearer Token).",
 )
 async def eliminar_anexo(
     anexo_id: int,
+    usuario_id: int = Depends(get_current_user_id),
     service: AnexoService = Depends(get_service),
 ):
-    await service.eliminar_anexo(anexo_id)
+    await service.eliminar_anexo(anexo_id, usuario_id=usuario_id)

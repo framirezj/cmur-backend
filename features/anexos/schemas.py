@@ -28,6 +28,8 @@ class AnexoUpdate(BaseModel):
 
 class AnexoResponse(AnexoBase):
     id: str
+    creado_por_id: Optional[int] = Field(None, validation_alias="creado_por_id", serialization_alias="creadoPorId")
+    actualizado_por_id: Optional[int] = Field(None, validation_alias="actualizado_por_id", serialization_alias="actualizadoPorId")
 
     @field_validator("id", mode="before")
     @classmethod
