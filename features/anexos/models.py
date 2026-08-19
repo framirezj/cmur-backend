@@ -7,9 +7,9 @@ class Anexo(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     anexo: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
-    ubicacion: Mapped[str] = mapped_column(String(255), nullable=False)
-    unidad_servicio: Mapped[str] = mapped_column(String(255), nullable=False)
-    funcionarios: Mapped[str] = mapped_column(String(255), nullable=False)
+    ubicacion: Mapped[str] = mapped_column(String(255), nullable=True)
+    unidad_servicio: Mapped[str] = mapped_column(String(255), nullable=True)
+    funcionarios: Mapped[str] = mapped_column(String(255), nullable=True)
     creado_por_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True
     )

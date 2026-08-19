@@ -69,7 +69,7 @@ class AnexoRepository:
         search: str | None = None,
         unidad_servicio: str | None = None,
     ) -> Sequence[Anexo]:
-        await self.seed_if_empty()
+        # await self.seed_if_empty()
         query = select(Anexo).order_by(Anexo.id.asc())
 
         if search:
