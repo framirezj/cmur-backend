@@ -4,6 +4,7 @@ from sqlalchemy import or_
 from typing import Sequence
 from features.anexos.models import Anexo
 from features.anexos.schemas import AnexoCreate, AnexoUpdate
+from sqlalchemy import text
 
 INITIAL_ANEXOS = [
     {
@@ -52,16 +53,28 @@ class AnexoRepository:
         query = select(Anexo)
         result = await self.db.execute(query)
         existing = result.scalars().first()
+        
         if not existing:
-            for data in INITIAL_ANEXOS:
-                anexo_obj = Anexo(
-                    id=data["id"],
-                    anexo=data["anexo"],
-                    ubicacion=data["ubicacion"],
-                    unidad_servicio=data["unidad_servicio"],
-                    funcionarios=data["funcionarios"],
+            # Ejecutar el INSERT directamente
+            insert_query = text("""
+                INSERT INTO anexos (
+                    anexo,
+                    ubicacion,
+                    unidad_servicio,
+                    funcionarios,
+                    creado_por_id,
+                    actualizado_por_id
                 )
-                self.db.add(anexo_obj)
+                SELECT 
+                    generate_series(500, 599) AS anexo,
+                    'Sin asignar',
+                    'Sin asignar',
+                    'Sin asignar',
+                    NULL,
+                    NULL
+            """)
+            
+            await self.db.execute(insert_query)
             await self.db.commit()
 
     async def get_all(
@@ -69,7 +82,7 @@ class AnexoRepository:
         search: str | None = None,
         unidad_servicio: str | None = None,
     ) -> Sequence[Anexo]:
-        # await self.seed_if_empty()
+        await self.seed_if_empty()
         query = select(Anexo).order_by(Anexo.id.asc())
 
         if search:
