@@ -1,11 +1,13 @@
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
+from core.config import settings
+
 class Base(DeclarativeBase):
     pass
 
 
-DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/cesfam_db"
+DATABASE_URL = settings.DATABASE_URL
 
 #crea el motor de la conexion a la base de datos asincronico
 engine = create_async_engine(
