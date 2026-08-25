@@ -40,5 +40,4 @@ volumes:
 
 networks:
   cesfam:
-    name: cesfam
-    driver: bridge
+    external: true

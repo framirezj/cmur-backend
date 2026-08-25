@@ -1,5 +1,12 @@
+# Traer el ejecutable de uv desde la imagen oficial
+FROM ghcr.io/astral-sh/uv:latest AS uv
+
 # Etapa de compilación (Builder)
-FROM astral-sh/uv:python3.13-slim AS builder
+FROM python:3.13-slim AS builder
+
+# Copiar el binario de uv
+COPY --from=uv /uv /uvx /bin/
+
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 WORKDIR /app
 
