@@ -13,8 +13,15 @@ class AnexoService:
         self,
         search: str | None = None,
         unidad_servicio: str | None = None,
-    ) -> Sequence[Anexo]:
-        return await self.repo.get_all(search=search, unidad_servicio=unidad_servicio)
+        page: int = 1,
+        size: int = 20,
+    ) -> tuple[Sequence[Anexo], int]:
+        return await self.repo.get_all(
+            search=search,
+            unidad_servicio=unidad_servicio,
+            page=page,
+            size=size,
+        )
 
     async def obtener_anexo(self, anexo_id: int) -> Anexo:
         anexo = await self.repo.get_by_id(anexo_id)

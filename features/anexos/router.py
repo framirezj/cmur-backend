@@ -4,7 +4,7 @@ from core.database import get_db
 from core.security import get_current_user_id
 from features.anexos.service import AnexoService
 from features.anexos.repository import AnexoRepository
-from features.anexos.schemas import AnexoResponse, AnexoCreate, AnexoUpdate
+from features.anexos.schemas import AnexoResponse, AnexoCreate, AnexoUpdate, PaginatedAnexoResponse
 from typing import Optional
 
 router = APIRouter(prefix="/anexos", tags=["Anexos"])
@@ -16,16 +16,31 @@ def get_service(db: AsyncSession = Depends(get_db)) -> AnexoService:
 
 @router.get(
     "/",
-    response_model=list[AnexoResponse],
+    response_model=PaginatedAnexoResponse,
     summary="Listar todos los anexos telefónicos",
     description="Obtiene el listado de anexos con posibilidad de filtrar por búsqueda de texto o unidad de servicio.",
 )
 async def listar_anexos(
     search: Optional[str] = Query(None, description="Búsqueda por texto (anexo, ubicación, unidad, funcionarios)"),
     unidad_servicio: Optional[str] = Query(None, alias="unidadServicio", description="Filtro por unidad de servicio"),
+    page: int = Query(1, ge=1, description="Número de página (1-based)"),
+    size: int = Query(20, ge=1, le=100, description="Cantidad de elementos por página"),
     service: AnexoService = Depends(get_service),
 ):
-    return await service.listar_anexos(search=search, unidad_servicio=unidad_servicio)
+    items, total = await service.listar_anexos(
+        search=search,
+        unidad_servicio=unidad_servicio,
+        page=page,
+        size=size,
+    )
+    pages = (total + size - 1) // size if total > 0 else 0
+    return PaginatedAnexoResponse(
+        items=items,
+        total=total,
+        page=page,
+        size=size,
+        pages=pages,
+    )
 
 
 @router.get(

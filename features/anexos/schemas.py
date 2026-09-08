@@ -42,3 +42,12 @@ class AnexoResponse(AnexoBase):
         from_attributes=True,
         populate_by_name=True
     )
+
+
+class PaginatedAnexoResponse(BaseModel):
+    items: list[AnexoResponse]
+    total: int
+    page: int
+    size: int
+    pages: int
+

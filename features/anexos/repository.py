@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from typing import Sequence
 from features.anexos.models import Anexo
 from features.anexos.schemas import AnexoCreate, AnexoUpdate
@@ -81,26 +81,37 @@ class AnexoRepository:
         self,
         search: str | None = None,
         unidad_servicio: str | None = None,
-    ) -> Sequence[Anexo]:
+        page: int = 1,
+        size: int = 20,
+    ) -> tuple[Sequence[Anexo], int]:
         await self.seed_if_empty()
+        
+        count_query = select(func.count()).select_from(Anexo)
         query = select(Anexo).order_by(Anexo.id.asc())
 
         if search:
             pattern = f"%{search}%"
-            query = query.where(
-                or_(
-                    Anexo.anexo.ilike(pattern),
-                    Anexo.ubicacion.ilike(pattern),
-                    Anexo.unidad_servicio.ilike(pattern),
-                    Anexo.funcionarios.ilike(pattern),
-                )
+            filter_cond = or_(
+                Anexo.anexo.ilike(pattern),
+                Anexo.ubicacion.ilike(pattern),
+                Anexo.unidad_servicio.ilike(pattern),
+                Anexo.funcionarios.ilike(pattern),
             )
+            query = query.where(filter_cond)
+            count_query = count_query.where(filter_cond)
 
         if unidad_servicio:
             query = query.where(Anexo.unidad_servicio == unidad_servicio)
+            count_query = count_query.where(Anexo.unidad_servicio == unidad_servicio)
 
+        # Obtener total
+        total_result = await self.db.execute(count_query)
+        total = total_result.scalar_one()
+
+        # Obtener elementos paginados
+        query = query.limit(size).offset((page - 1) * size)
         result = await self.db.execute(query)
-        return result.scalars().all()
+        return result.scalars().all(), total
 
     async def get_by_id(self, anexo_id: int) -> Anexo | None:
         await self.seed_if_empty()
