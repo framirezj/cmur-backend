@@ -12,10 +12,17 @@ class UsuarioRepository:
 
     # ── Usuarios ──────────────────────────────────────────────────────────────
 
-    async def get_by_google_sub(self, google_sub: str) -> Usuario | None:
-        """Busca un usuario por su ID único de Google (sub)."""
+    async def get_by_rut(self, rut: str) -> Usuario | None:
+        """Busca un usuario por su RUT."""
         result = await self.db.execute(
-            select(Usuario).where(Usuario.google_sub == google_sub)
+            select(Usuario).where(Usuario.rut == rut)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_email(self, email: str) -> Usuario | None:
+        """Busca un usuario por su correo electrónico."""
+        result = await self.db.execute(
+            select(Usuario).where(Usuario.email == email)
         )
         return result.scalar_one_or_none()
 
@@ -60,7 +67,6 @@ class UsuarioRepository:
         favorito = Favorito(usuario_id=usuario_id, enlace_id=enlace_id)
         self.db.add(favorito)
         await self.db.commit()
-        # Cargar el enlace relacionado para retornarlo completo
         result = await self.db.execute(
             select(Favorito)
             .where(Favorito.usuario_id == usuario_id, Favorito.enlace_id == enlace_id)

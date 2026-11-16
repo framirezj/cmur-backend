@@ -10,7 +10,6 @@ from contextlib import asynccontextmanager
 from sqlalchemy import text
 from core.database import engine, Base
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from core.config import settings
 
 @asynccontextmanager
@@ -71,11 +70,6 @@ async def health():
     return {"status":"ok",
             "info":"Portal Enlaces CESFAM"
     }
-
-
-@app.get("/test-login", include_in_schema=False)
-async def test_login_page():
-    return FileResponse("test_google_login.html")
 
 
 

@@ -1,18 +1,19 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_db
 from core.security import get_current_user_id
 from features.usuarios.service import UsuarioService
 from features.usuarios.repository import UsuarioRepository
 from features.usuarios.schemas import (
-    GoogleLoginRequest,
+    RegistroRequest,
+    LoginRequest,
     TokenResponse,
     UsuarioResponse,
     FavoritoResponse,
 )
 
 
-router = APIRouter(tags=["Usuarios"])
+router = APIRouter(tags=["Usuarios & Autenticación"])
 
 
 # ── Dependencia de servicio ───────────────────────────────────────────────────
@@ -24,17 +25,31 @@ def get_service(db: AsyncSession = Depends(get_db)) -> UsuarioService:
 # ── Auth ──────────────────────────────────────────────────────────────────────
 
 @router.post(
-    "/auth/google",
+    "/auth/register",
     response_model=TokenResponse,
-    summary="Login con Google",
-    description="Recibe el **id_token** de Google Identity Services, valida la identidad, "
-                "crea el usuario si es la primera vez, y retorna el JWT de la aplicación.",
+    status_code=status.HTTP_201_CREATED,
+    summary="Registro de funcionario",
+    description="Registra un funcionario mediante su RUT y un PIN numérico de 4 dígitos. "
+                "Se le asigna automáticamente el rol 'usuario'.",
 )
-async def login_google(
-    body: GoogleLoginRequest,
+async def registrar_usuario(
+    body: RegistroRequest,
     service: UsuarioService = Depends(get_service),
 ):
-    return await service.login_con_google(body.id_token)
+    return await service.registrar(body)
+
+
+@router.post(
+    "/auth/login",
+    response_model=TokenResponse,
+    summary="Iniciar sesión con RUT y PIN",
+    description="Autentica a un funcionario validando su RUT y PIN de 4 dígitos. Retorna el JWT de acceso.",
+)
+async def login_usuario(
+    body: LoginRequest,
+    service: UsuarioService = Depends(get_service),
+):
+    return await service.login(body)
 
 
 # ── Perfil ────────────────────────────────────────────────────────────────────
@@ -68,7 +83,7 @@ async def listar_favoritos(
 @router.post(
     "/usuarios/me/favoritos/{enlace_id}",
     response_model=FavoritoResponse,
-    status_code=201,
+    status_code=status.HTTP_201_CREATED,
     summary="Agregar un enlace a favoritos",
 )
 async def agregar_favorito(
@@ -81,7 +96,7 @@ async def agregar_favorito(
 
 @router.delete(
     "/usuarios/me/favoritos/{enlace_id}",
-    status_code=204,
+    status_code=status.HTTP_204_NO_CONTENT,
     summary="Eliminar un enlace de favoritos",
 )
 async def eliminar_favorito(

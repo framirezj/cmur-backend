@@ -1,16 +1,18 @@
 from datetime import datetime, timezone
 from core.database import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, ForeignKey, DateTime, UniqueConstraint
+from sqlalchemy import String, Integer, ForeignKey, DateTime
 
 
 class Usuario(Base):
     __tablename__ = "usuarios"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    google_sub: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    rut: Mapped[str] = mapped_column(String(20), unique=True, nullable=False, index=True)
     nombre: Mapped[str] = mapped_column(String(200), nullable=False)
-    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    pin_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    rol: Mapped[str] = mapped_column(String(20), default="usuario", nullable=False)  # "usuario" o "admin"
+    email: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True, index=True)
     foto_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

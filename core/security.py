@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta, timezone
+import bcrypt
 from jose import JWTError, jwt
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from core.config import settings
@@ -10,27 +9,28 @@ from core.config import settings
 bearer_scheme = HTTPBearer()
 
 
-def verify_google_token(token: str) -> dict:
-    """
-    Verifica el id_token emitido por Google Identity Services.
-    Retorna el payload con: sub, email, name, picture, etc.
-    Lanza ValueError si el token es inválido o expirado.
-    """
-    try:
-        payload = id_token.verify_oauth2_token(
-            token,
-            google_requests.Request(),
-            settings.GOOGLE_CLIENT_ID,
-        )
-        return payload
-    except Exception as e:
-        raise ValueError(f"Token de Google inválido: {e}")
+# ── Hash de PIN ───────────────────────────────────────────────────────────────
 
+def hash_pin(pin: str) -> str:
+    """Genera el hash seguro de un PIN de 4 dígitos usando bcrypt."""
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(pin.encode("utf-8"), salt).decode("utf-8")
+
+
+def verify_pin(plain_pin: str, hashed_pin: str) -> bool:
+    """Verifica si un PIN en texto plano coincide con su hash."""
+    try:
+        return bcrypt.checkpw(plain_pin.encode("utf-8"), hashed_pin.encode("utf-8"))
+    except Exception:
+        return False
+
+
+# ── JWT ───────────────────────────────────────────────────────────────────────
 
 def create_access_token(data: dict) -> str:
     """
     Genera un JWT propio firmado con JWT_SECRET_KEY.
-    Incluye la expiración definida en JWT_EXPIRE_MINUTES.
+    Incluye 'sub' (usuario.id), 'rol' y la expiración en JWT_EXPIRE_MINUTES.
     """
     payload = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
@@ -54,18 +54,44 @@ def decode_access_token(token: str) -> dict:
         )
 
 
-async def get_current_user_id(
+# ── Dependencias de autenticación y autorización ──────────────────────────────
+
+def get_current_user_payload(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> dict:
+    """Extrae y decodifica el payload del JWT de la cabecera Authorization."""
+    return decode_access_token(credentials.credentials)
+
+
+def get_current_user_id(
+    payload: dict = Depends(get_current_user_payload),
 ) -> int:
     """
-    Dependencia FastAPI: extrae el usuario_id del JWT del header Authorization.
+    Dependencia FastAPI: extrae el usuario_id del JWT.
     Uso: usuario_id: int = Depends(get_current_user_id)
     """
-    payload = decode_access_token(credentials.credentials)
-    usuario_id: int | None = payload.get("sub")
+    usuario_id: str | None = payload.get("sub")
     if usuario_id is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token sin identidad de usuario",
         )
     return int(usuario_id)
+
+
+def require_admin(
+    payload: dict = Depends(get_current_user_payload),
+) -> int:
+    """
+    Dependencia FastAPI: verifica que el usuario autenticado posea rol 'admin'.
+    Si el rol es 'usuario' u otro, lanza 403 Forbidden.
+    Retorna el usuario_id del administrador.
+    """
+    usuario_id = get_current_user_id(payload)
+    rol: str = payload.get("rol", "usuario")
+    if rol != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permiso denegado: se requiere rol de administrador para realizar esta acción.",
+        )
+    return usuario_id
